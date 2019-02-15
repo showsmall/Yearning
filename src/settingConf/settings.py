@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 import os
 import datetime
 from libs import util
+
 CONF_DATA = util.conf_path()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -24,25 +25,21 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'u)zall!ag&mci+ja5u&-6*1e^ufyu)l4i8+^=mw$845@k!ie+3.txt'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-# CELERY_BROKER_URL = 'redis://127.0.0.1:6379/3'
-
-# CELERY_ACCEPT_CONTENT = ['json']
-# CELERY_RESULT_BACKEND = 'django-db'
-# CELERY_TASK_SERIALIZER = 'json'
-
-ALLOWED_HOSTS = [str(CONF_DATA.ipaddress).split(':')[0]]
+# ALLOWED_HOSTS = [str(CONF_DATA.ipaddress).split(':')[0]]
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 AUTH_USER_MODEL = 'core.Account'
 
 INSTALLED_APPS = [
-    # 'django_celery_results',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'core.apps.CoreConfig',
-    'rest_framework'
+    'rest_framework',
+    'django.contrib.staticfiles',
+    'settingConf'
 ]
 
 MIDDLEWARE = [
@@ -52,16 +49,8 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware'
 ]
-
-CORS_ORIGIN_WHITELIST = (
-    CONF_DATA.ipaddress
-)
-
-CSRF_TRUSTED_ORIGINS = (
-    CONF_DATA.ipaddress,
-    '127.0.0.1:8080'
-)
-
+CORS_ORIGIN_ALLOW_ALL = True
+CSRF_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_METHODS = (
     'DELETE',
     'GET',
@@ -87,6 +76,28 @@ DATABASES = {
         "HOST": CONF_DATA.address
     }
 }
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': ['dist'],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+STATIC_URL = '/static/'
+
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, 'dist/static').replace('\\', '/'),
+)
 
 # Password validation
 # https://docs.djangoproject.com/en/1.10/ref/settings/#auth-password-validators
@@ -130,7 +141,7 @@ REST_FRAMEWORK = {
 JWT_AUTH = {
     'JWT_RESPONSE_PAYLOAD_HANDLER':
         'rest_framework_jwt.utils.jwt_response_payload_handler',
-    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3000000),
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=7200),
 }
 
 LOGGING = {
@@ -140,32 +151,32 @@ LOGGING = {
         'standard': {
             'format': '%(asctime)s [%(threadName)s:%(thread)d] \
                       [%(name)s:%(lineno)d] [%(levelname)s]- %(message)s'}
-                    # 日志格式
+        # 日志格式
     },
     'filters': {
     },
     'handlers': {
         'error': {
-            'level':'ERROR',
-            'class':'logging.handlers.RotatingFileHandler',
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
             'filename': 'log/error.log',
-            'maxBytes':1024*1024*100,
+            'maxBytes': 1024 * 1024 * 100,
             'backupCount': 1,
-            'formatter':'standard'
-            },
+            'formatter': 'standard'
+        },
         'default': {
-            'level':'INFO',
-            'class':'logging.handlers.RotatingFileHandler',
-            'filename': 'log/all.log',     #日志输出文件
-            'maxBytes': 1024*1024*100,                  #文件大小
-            'backupCount': 1,                         #备份份数
-            'formatter':'standard',                   #使用哪种formatters日志格式
-            },
-        'console': {
             'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': 'log/all.log',  # 日志输出文件
+            'maxBytes': 1024 * 1024 * 100,  # 文件大小
+            'backupCount': 1,  # 备份份数
+            'formatter': 'standard',  # 使用哪种formatters日志格式
+        },
+        'console': {
+            'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'formatter': 'standard'
-            }
+        }
     },
     'loggers': {
         'django': {

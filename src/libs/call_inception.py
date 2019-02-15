@@ -9,24 +9,32 @@ cookie
 '''
 
 from libs import util
+from settingConf import settings
+from libs.cryptoAES import cryptoAES
 import pymysql
 import sqlparse
+import ast
 
 pymysql.install_as_MySQLdb()
-
-conf = util.conf_path()
 
 
 class Inception(object):
     def __init__(self, LoginDic=None):
         self.__dict__.update(LoginDic)
+        self.AES = cryptoAES(settings.SECRET_KEY)
         self.con = object
+        try:
+            self.password = self.AES.decrypt(self.__dict__.get('password'))
+        except ValueError:
+            self.password = self.__dict__.get('password')
 
     def __enter__(self):
-        self.con = pymysql.connect(host=conf.inc_host,
-                                   user=conf.inc_user,
-                                   passwd=conf.inc_pwd,
-                                   port=int(conf.inc_port),
+        un_init = util.init_conf()
+        inception = ast.literal_eval(un_init['inception'])
+        self.con = pymysql.connect(host=inception['host'],
+                                   user=inception['user'],
+                                   passwd=inception['password'],
+                                   port=int(inception['port']),
                                    db='',
                                    charset="utf8")
         return self
@@ -44,7 +52,7 @@ class Inception(object):
              %s; \
              inception_magic_commit;
             ''' % (self.__dict__.get('user'),
-                   self.__dict__.get('password'),
+                   self.password,
                    self.__dict__.get('host'),
                    self.__dict__.get('port'),
                    Type,
@@ -60,7 +68,7 @@ class Inception(object):
                         %s; \
                         inception_magic_commit;
                        ''' % (self.__dict__.get('user'),
-                              self.__dict__.get('password'),
+                              self.password,
                               self.__dict__.get('host'),
                               self.__dict__.get('port'),
                               Type,
@@ -89,8 +97,10 @@ class Inception(object):
                     'sql': row[5],
                     'affected_rows': row[6],
                     'sequence': row[7],
-                    'backup_dbname': row[8]
-                } 
+                    'backup_dbname': row[8],
+                    'execute_time': row[9],
+                    'SQLSHA1': row[10]
+                }
                 for row in result
             ]
         return Dataset
@@ -102,17 +112,25 @@ class Inception(object):
             result = cursor.fetchall()
             Dataset = [
                 {
-                    'ID': row[0], 
-                    'stage': row[1], 
-                    'errlevel': row[2], 
+                    'ID': row[0],
+                    'stage': row[1],
+                    'errlevel': row[2],
                     'stagestatus': row[3],
-                    'errormessage': row[4], 
-                    'sql': row[5], 
-                    'affected_rows': row[6]
-                } 
-                for row in result 
+                    'errormessage': row[4],
+                    'sql': row[5],
+                    'affected_rows': row[6],
+                    'SQLSHA1': row[10]
+                }
+                for row in result
             ]
         return Dataset
+
+    def oscstep(self, sql=None):
+        with self.con.cursor(cursor=pymysql.cursors.DictCursor) as cursor:
+            cursor.execute(sql)
+            result = cursor.fetchall()
+            cursor.close()
+        return result
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.con.close()

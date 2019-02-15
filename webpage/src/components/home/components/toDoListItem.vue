@@ -31,7 +31,7 @@ export default {
   methods: {
     handleHasDid (val) {
       let vm = this
-      this.todoitem = true
+      this.todoitem = false
       setTimeout(function () {
         vm.$emit('deltodo', val)
       }, 2000)

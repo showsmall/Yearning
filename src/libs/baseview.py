@@ -1,16 +1,12 @@
-from django.views.generic.base import View
-from django.utils.decorators import method_decorator
-from rest_framework.decorators import api_view
 from rest_framework.permissions import (
     IsAdminUser,
-    AllowAny
+    IsAuthenticated
 )
 from rest_framework.views import APIView
 
-@method_decorator(api_view(['DELETE', 'GET', 'POST', 'PUT']), 'dispatch')
-class BaseView(View):
-    def dispatch(self, *args, **kwargs):
-        return super(BaseView, self).dispatch(*args, **kwargs)
+
+class BaseView(APIView):
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request, args: str = None):
         pass
@@ -26,7 +22,6 @@ class BaseView(View):
 
 
 class SuperUserpermissions(APIView):
-    
     permission_classes = (IsAdminUser,)
 
     def get(self, request, args: str = None):
@@ -43,7 +38,6 @@ class SuperUserpermissions(APIView):
 
 
 class AnyLogin(APIView):
-
     permission_classes = ()
     authentication_classes = ()
 

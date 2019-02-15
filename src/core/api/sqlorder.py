@@ -1,16 +1,13 @@
 import logging
 import json
-from libs import send_email
-from libs import baseview
+from libs import baseview, util
 from libs import call_inception
-from libs import util
+from core.task import submit_push_messages
 from rest_framework.response import Response
 from django.http import HttpResponse
 from core.models import (
     DatabaseList,
-    SqlOrder,
-    Account,
-    globalpermissions
+    SqlOrder
 )
 
 CUSTOM_ERROR = logging.getLogger('Yearning.core.views')
@@ -21,6 +18,8 @@ addr_ip = conf.ipaddress
 
 class sqlorder(baseview.BaseView):
     '''
+
+    :argument 手动模式工单提交相关接口api
 
     put   美化sql  测试sql
 
@@ -55,7 +54,7 @@ class sqlorder(baseview.BaseView):
                     'password': data.password,
                     'db': base,
                     'port': data.port
-                    }
+                }
             except KeyError as e:
                 CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
             else:
@@ -65,14 +64,14 @@ class sqlorder(baseview.BaseView):
                         return Response({'result': res, 'status': 200})
                 except Exception as e:
                     CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
-                    return Response({'status': '500'})
+                    return HttpResponse(e)
 
     def post(self, request, args=None):
         try:
             data = json.loads(request.data['data'])
             tmp = json.loads(request.data['sql'])
-            user = request.data['user']
             type = request.data['type']
+            real_name = request.data['real_name']
             id = request.data['id']
         except KeyError as e:
             CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
@@ -80,11 +79,13 @@ class sqlorder(baseview.BaseView):
         else:
             try:
                 x = [x.rstrip(';') for x in tmp]
+                if str(x[0]).lstrip().startswith('use'):
+                    del x[0]
                 sql = ';'.join(x)
                 sql = sql.strip(' ').rstrip(';')
                 workId = util.workId()
                 SqlOrder.objects.get_or_create(
-                    username=user,
+                    username=request.user,
                     date=util.date(),
                     work_id=workId,
                     status=2,
@@ -94,39 +95,19 @@ class sqlorder(baseview.BaseView):
                     text=data['text'],
                     backup=data['backup'],
                     bundle_id=id,
-                    assigned=data['assigned']
-                    )
-                content = DatabaseList.objects.filter(id=id).first()
-                mail = Account.objects.filter(username=data['assigned']).first()
-                tag = globalpermissions.objects.filter(authorization='global').first()
-                ret_info = '已提交，请等待管理员审核!'
-                if tag is None or tag.dingding == 0:
-                    pass
-                else:
-                    if content.url:
-                        try:
-                            util.dingding(
-                                content='工单提交通知\n工单编号:%s\n发起人:%s\n地址:%s\n工单说明:%s\n状态:已提交\n备注:%s'
-                                        %(workId,user,addr_ip,data['text'],content.before), url=content.url)
-                        except:
-                            ret_info = '工单执行成功!但是钉钉推送失败,请查看错误日志排查错误.'
-                if tag is None or tag.email == 0:
-                    pass
-                else:
-                    if mail.email:
-                        mess_info = {
-                            'workid': workId,
-                            'to_user': user,
-                            'addr': addr_ip,
-                            'text': data['text'],
-                            'note': content.before}
-                        try:
-                            put_mess = send_email.send_email(to_addr=mail.email)
-                            put_mess.send_mail(mail_data=mess_info, type=2)
-                        except:
-                            ret_info = '工单执行成功!但是邮箱推送失败,请查看错误日志排查错误.'
-                return Response(ret_info)
+                    assigned=data['assigned'],
+                    delay=data['picker'],
+                    real_name=real_name
+                )
+                submit_push_messages(
+                    workId=workId,
+                    user=request.user,
+                    addr_ip=addr_ip,
+                    text=data['text'],
+                    assigned=data['assigned'],
+                    id=id
+                ).start()
+                return Response('已提交，请等待管理员审核!')
             except Exception as e:
                 CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
                 return HttpResponse(status=500)
-            

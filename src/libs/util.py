@@ -8,21 +8,29 @@ cookie
 
 '''
 
-from urllib import request
-from collections import namedtuple
 import json
 import random
 import ssl
 import time
-import ldap3
 import configparser
+import ast
+from urllib import request
+from collections import namedtuple
+from ldap3 import Server, Connection, SUBTREE, ALL
+from libs import con_database
+
+_conf = configparser.ConfigParser()
+_conf.read('deploy.conf')
 
 
 def dingding(content: str = None, url: str = None):
     '''
-    dingding webhook 
+
+    dingding webhook
+
     '''
-    pdata = {"msgtype": "text", "text": {"content": content}}
+
+    pdata = {"msgtype": "markdown", "markdown": {"title": "Yearning sql审计平台", "text": content}}
     binary_data = json.dumps(pdata).encode(encoding='UTF8')
     headers = {"Content-Type": "application/json"}
     req = request.Request(url, headers=headers)
@@ -68,34 +76,78 @@ def conf_path() -> object:
     '''
     读取配置文件属性
     '''
-    _conf = configparser.ConfigParser()
-    _conf.read('deploy.conf')
-    conf_set = namedtuple("name", ["db", "address", "port", "username", "password", "ipaddress",
-                                   "inc_host", "inc_port", "inc_user", "inc_pwd", "backupdb",
-                                   "backupport", "backupuser", "backuppassword","ladp_server",
-                                   "ldap_scbase","ladp_domain", "mail_user","mail_password","smtp"])
+    conf_set = namedtuple(
+        "name", ["db", "address", "port", "username", "password", "ipaddress"])
 
     return conf_set(_conf.get('mysql', 'db'), _conf.get('mysql', 'address'),
                     _conf.get('mysql', 'port'), _conf.get('mysql', 'username'),
-                    _conf.get('mysql', 'password'), _conf.get('host', 'ipaddress'),
-                    _conf.get('Inception', 'ip'), _conf.get('Inception', 'port'),
-                    _conf.get('Inception', 'user'), _conf.get('Inception', 'password'),
-                    _conf.get('Inception', 'backupdb'), _conf.get('Inception', 'backupport'),
-                    _conf.get('Inception', 'backupuser'), _conf.get('Inception', 'backuppassword'),
-                    _conf.get('LDAP','LDAP_SERVER'),_conf.get('LDAP','LDAP_SCBASE'),_conf.get('LDAP','LDAP_DOMAIN'),
-                    _conf.get('email', 'username'), _conf.get('email', 'password'), _conf.get('email', 'smtp_server'))
+                    _conf.get('mysql', 'password'), _conf.get('host', 'ipaddress'))
+
+
+class LDAPConnection(object):
+    def __init__(self, url, user, password):
+        server = Server(url, get_info=ALL)
+        self.conn = Connection(server, user=user, password=password, check_names=True, lazy=False,
+                               raise_exceptions=False)
+
+    def __enter__(self):
+        self.conn.bind()
+        return self.conn
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.conn.unbind()
+
+
+def test_auth(url, user, password):
+    with LDAPConnection(url, user, password) as conn:
+        if conn.bind():
+            return True
+    return False
+
 
 def auth(username, password):
-    conf = conf_path()
-    LDAP_SERVER = conf.ladp_server
-    LDAP_DOMAIN = conf.ladp_domain
-    c = ldap3.Connection(
-        ldap3.Server(LDAP_SERVER, get_info=ldap3.ALL),
-        user=username + '@' + LDAP_DOMAIN,
-        password=password)
-    ret = c.bind()
-    if ret:
-        c.unbind()
-        return True
+    un_init = init_conf()
+    ldap = ast.literal_eval(un_init['ldap'])
+
+    LDAP_TYPE = ldap['type']
+    LDAP_SCBASE = ldap['sc']
+
+    if LDAP_TYPE == '1':
+        search_filter = '(sAMAccountName={})'.format(username)
+    elif LDAP_TYPE == '2':
+        search_filter = '(uid={})'.format(username)
     else:
-        return False
+        search_filter = '(cn={})'.format(username)
+
+    with LDAPConnection(ldap['url'], ldap['user'], ldap['password']) as conn:
+
+        res = conn.search(
+            search_base=LDAP_SCBASE,
+            search_filter=search_filter,
+            search_scope=SUBTREE,
+            attributes=['cn', 'uid', 'mail'],
+        )
+        if res:
+            entry = conn.response[0]
+            # check password by dn
+            try:
+                if conn.rebind(user=entry['dn'], password=password):
+                    attr_dict = entry['attributes']
+                    print((True, attr_dict["mail"], attr_dict["cn"], attr_dict["uid"]))
+                    return True
+            except Exception as e:
+                print(str(e))
+    return False
+
+
+def init_conf():
+    with con_database.SQLgo(
+            ip=_conf.get('mysql', 'address'),
+            user=_conf.get('mysql', 'username'),
+            password=_conf.get('mysql', 'password'),
+            db=_conf.get('mysql', 'db'),
+            port=_conf.get('mysql', 'port')) as f:
+        res = f.query_info(
+            "select * from core_globalpermissions where authorization = 'global'")
+
+    return res[0]

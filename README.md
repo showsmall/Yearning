@@ -1,37 +1,46 @@
 <p align="center">
-        <img width="300" src="http://oy0f4k5qi.bkt.clouddn.com/git_logo2.svg">
+        <img width="300" src="logo.png">
 </p>
 
 # Yearning SQL审核平台
 
-![](https://img.shields.io/badge/build-passing-brightgreen.svg)  
-![](https://img.shields.io/badge/vue.js-2.5.0-brightgreen.svg) 
-![](https://img.shields.io/badge/iview-2.8.0-brightgreen.svg?style=flat-square) 
+![](https://img.shields.io/badge/build-release-brightgreen.svg)  
+![](https://img.shields.io/badge/version-v1.4.0-brightgreen.svg)  
+![](https://img.shields.io/badge/vue.js-2.5.13-brightgreen.svg) 
+![](https://img.shields.io/badge/iview-3.2.1-brightgreen.svg?style=flat-square) 
 ![](https://img.shields.io/badge/python-3.6-brightgreen.svg)
-![](https://img.shields.io/badge/Django-2.0-brightgreen.svg)
+![](https://img.shields.io/badge/Django-2.1.5-brightgreen.svg)
 
-基于Inception的整套sql审核平台解决方案。
+##### MYSQL web端 SQL审核平台。
 
-## Feature 功能：
-- 数据库字典自动生成
+## Website 官网
+
+[www.yearning.io](http://yearning.io)
+
+
+## Feature 功能
+
 - SQL查询
-- SQL可视化自动生成
-    - INDEX 索引语句
-    - ALTER 更改表结构语句
+    - 查询工单 
+    - 导出
+    - 自动补全，智能提示 
+    - 查询语句审计
 - SQL审核
     - 流程化工单
-    - SQL语句检测
-    - SQL语句执行
+    - SQL语句检测与执行
     - SQL回滚
     - 历史审核记录
 - 推送
-    - 站内信工单通知
     - E-mail工单推送
     - 钉钉webhook机器人工单推送
+- 用户权限及管理
+    - 拼图式权限划分
+    - 组合式权限组
+    - 支持限制邮箱后缀名的有限注册功能
 - 其他
     - todoList
-    - LDAP登陆   
-- 用户权限及管理
+    - LDAP登录  
+    - 动态配置 
 
 ## Environment 环境
 
@@ -39,28 +48,19 @@
 
 - Vue.js 2.5
 
-- Django 2.0
+- Django 2.1.5
 
 ## Install 安装及使用日志
-- [Yearning使用及安装文档](https://cookiey.github.io/Yearning-document/)
 
-- 体验及快速测试安装(docker)
+[使用及安装文档](http://guide.yearning.io)
 
-```
+## Support 支持Yearning
 
-docker run -it -d -p 80:80 -p 8000:8000 -e "HOST=宿主机ip" registry.cn-hangzhou.aliyuncs.com/cookie/yearning:v0.0.5 
+如果Yearning能够帮助到你，请支持下Yearning吧，让Yearning能够持续改善并更新
 
-初始账号: admin  密码: Yearning_admin
-```
-注意: 
-
-docker版本不支持e-mail推送及ldap登陆
-
-由于目前镜像并没有将数据库数据存放目录挂载到宿主机所以不建议在正式环境中使用docker
-
-建议在使用前评估及测试中使用
-## Update 更新日志
-  - [Yearning更新日志](https://cookiey.github.io/Yearning-document/update/)
+![](img/alipay.jpg)
+![](img/wechat.jpg)
+  
 ## About 联系方式
    
    QQ群:103674679
@@ -71,29 +71,39 @@ docker版本不支持e-mail推送及ldap登陆
 
 - Login
 
-![login -w1200](http://oy0f4k5qi.bkt.clouddn.com/logo.png)
+
+
+![login](img/login.jpeg)
 
 
 - Dashboard
 
-![](http://oy0f4k5qi.bkt.clouddn.com/index.png)
+![](img/dash.png)
 
+- 审核
 
-- 表结构提交页面
+![](img/order.png)
 
-![](http://oy0f4k5qi.bkt.clouddn.com/table.png)
+- SQL语法高亮及自动补全
 
-- SQL提交页面
+![](img/lighit.png)
 
-![](http://oy0f4k5qi.bkt.clouddn.com/sql.png)
+- 查询
 
-- 工单页面
-![](http://oy0f4k5qi.bkt.clouddn.com/order.png)
+![](img/query.png)
+
+- 细粒度的权限分配
+![](img/PER.png)
+
+- 我的工单
+![](img/myorder.png)
 
 
 ## License
 
-- MIT
+- AGPL v3
+
+任何二次开发及二次开源项目请严格遵守相应开源许可
 
 2018 © Cookie
 
