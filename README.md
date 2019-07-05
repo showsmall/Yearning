@@ -3,13 +3,9 @@
 </p>
 
 # Yearning SQL审核平台
-
+![LICENSE](https://img.shields.io/badge/license-AGPL%20-blue.svg)
 ![](https://img.shields.io/badge/build-release-brightgreen.svg)  
-![](https://img.shields.io/badge/version-v1.4.0-brightgreen.svg)  
-![](https://img.shields.io/badge/vue.js-2.5.13-brightgreen.svg) 
-![](https://img.shields.io/badge/iview-3.2.1-brightgreen.svg?style=flat-square) 
-![](https://img.shields.io/badge/python-3.6-brightgreen.svg)
-![](https://img.shields.io/badge/Django-2.1.5-brightgreen.svg)
+![](https://img.shields.io/badge/version-v1.4.7-brightgreen.svg)  
 
 ##### MYSQL web端 SQL审核平台。
 
@@ -42,24 +38,9 @@
     - LDAP登录  
     - 动态配置 
 
-## Environment 环境
-
-- Python 3.6
-
-- Vue.js 2.5
-
-- Django 2.1.5
-
 ## Install 安装及使用日志
 
 [使用及安装文档](http://guide.yearning.io)
-
-## Support 支持Yearning
-
-如果Yearning能够帮助到你，请支持下Yearning吧，让Yearning能够持续改善并更新
-
-![](img/alipay.jpg)
-![](img/wechat.jpg)
   
 ## About 联系方式
    

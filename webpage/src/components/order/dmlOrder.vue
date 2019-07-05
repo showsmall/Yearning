@@ -44,7 +44,7 @@
                 </FormItem>
 
                 <FormItem label="工单说明:" prop="text">
-                  <Input v-model="formItem.text" placeholder="请输入"></Input>
+                  <Input v-model="formItem.text" placeholder="请输入" type="textarea" rows="4"></Input>
                 </FormItem>
 
                 <FormItem label="指定审核人:" prop="assigned">
@@ -62,7 +62,7 @@
 
                 <FormItem label="定时执行">
                   <DatePicker format="yyyy-MM-dd HH:mm" type="datetime" placeholder="选择时间点" :options="invalidDate"
-                              v-model="formItem.picker" @on-change="formItem.picker=$event"></DatePicker>
+                              v-model="formItem.delay" @on-change="formItem.delay=$event" :editable="false"></DatePicker>
                 </FormItem>
               </Form>
               <Form :label-width="30">
@@ -144,7 +144,7 @@
           text: '',
           backup: '0',
           assigned: '',
-          picker: null
+          delay: null
         },
         columnsName: [
           {
@@ -323,7 +323,7 @@
         this.$refs['formItem'].validate((valid) => {
           if (valid) {
             if (this.formItem.textarea) {
-              this.datalist.sqllist = this.formItem.textarea.replace(/(;|；)$/gi, '').replace(/\s/g, ' ').replace(/；/g, ';').split(';')
+              this.datalist.sqllist = this.formItem.textarea.replace(/(;|；)$/gi, '').replace(/\s/g, ' ').replace(/；/g, ';')
               axios.post(`${this.$config.url}/sqlsyntax/`, {
                 'data': JSON.stringify(this.formItem),
                 'sql': JSON.stringify(this.datalist.sqllist),

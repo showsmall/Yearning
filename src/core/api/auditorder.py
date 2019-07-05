@@ -3,6 +3,7 @@ import json
 import ast
 import threading
 import datetime
+import sqlparse
 from libs import baseview, call_inception, util, serializers, send_email
 from rest_framework.response import Response
 from django.http import HttpResponse
@@ -54,7 +55,7 @@ class audit(baseview.SuperUserpermissions):
                 u_mulit = Account.objects.filter(username=request.user).first()
                 if u_mulit.group == 'perform':
                     if qurey['valve']:
-                        if len(qurey['picker']) == 0:
+                        if qurey['picker'][0] is '':
                             info = SqlOrder.objects.filter(executor=request.user,
                                                            username__contains=qurey['user']).defer('sql').order_by(
                                 '-id')[
@@ -80,7 +81,7 @@ class audit(baseview.SuperUserpermissions):
                             executor=request.user).defer('sql').order_by('-id')[start:end]
                 else:
                     if qurey['valve']:
-                        if len(qurey['picker']) == 0:
+                        if qurey['picker'][0] is '':
                             info = SqlOrder.objects.filter(assigned=request.user,
                                                            username__contains=qurey['user']).defer('sql').order_by(
                                 '-id')[
@@ -171,6 +172,8 @@ class audit(baseview.SuperUserpermissions):
                             if str(idempotent.delay).rstrip() != '':
                                 now_time = datetime.datetime.now()
                                 next_time = datetime.datetime.strptime(idempotent.delay, "%Y-%m-%d %H:%M")
+                                if now_time > next_time:
+                                    return Response('工单定时执行时间不得小于当前时间！！！')
                                 delay = int((next_time - now_time).total_seconds())
                             SqlOrder.objects.filter(
                                 id=order_id).update(status=3)
@@ -265,8 +268,9 @@ class getsql(baseview.BaseView):
         id = request.GET.get('id')
         bundle = request.GET.get('bundle_id')
         baseCon = DatabaseList.objects.filter(id=bundle).first()
-        sql = SqlOrder.objects.filter(id=id).first()
-        return Response({'sql': sql.sql, 'comRoom': baseCon.computer_room, 'conn': baseCon.connection_name})
+        sql = SqlOrder.objects.filter(id=id).only('sql').first()
+        ser_sql = sqlparse.split(sql.sql)
+        return Response({'sql': json.dumps(ser_sql), 'comRoom': baseCon.computer_room, 'conn': baseCon.connection_name})
 
 
 def push_message(message=None, type=None, user=None, to_addr=None, work_id=None, status=None):

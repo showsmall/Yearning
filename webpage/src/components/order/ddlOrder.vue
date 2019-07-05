@@ -56,16 +56,16 @@ p {
                 <Button type="error" @click="canel()">重置</Button>
               </Form-item>
               <FormItem label="工单提交说明:" prop="text">
-                <Input v-model="formItem.text" placeholder="请输入工单说明"></Input>
+                <Input v-model="formItem.text" placeholder="请输入工单说明" type="textarea" rows="4"></Input>
               </FormItem>
               <FormItem label="指定审核人:" prop="assigned">
                 <Select v-model="formItem.assigned" filterable transfer>
                   <Option v-for="i in assigned" :value="i" :key="i">{{i}}</Option>
                 </Select>
               </FormItem>
-              <FormItem label="延迟执行" required>
-                <DatePicker format="yyyy-MM-dd HH:mm" type="datetime" placeholder="选择时间点" :options="invalidDate"
-                            v-model="formItem.picker" @on-change="formItem.picker=$event"></DatePicker>
+              <FormItem label="定时执行">
+                <DatePicker format="yyyy-MM-dd HH:mm" type="datetime" placeholder="选择时间点" :options="invalidDate" :editable="false"
+                            v-model="formItem.delay" @on-change="formItem.delay=$event"></DatePicker>
               </FormItem>
               <FormItem label="是否备份" prop="backup">
                 <RadioGroup v-model="formItem.backup">
@@ -194,7 +194,7 @@ export default {
         tablename: '',
         backup: '0',
         assigned: '',
-        picker: null
+        delay: null
       },
       id: null,
       tabs: 'order1',
@@ -459,7 +459,7 @@ export default {
     commitOrder () {
       this.$refs['formItem'].validate((valid) => {
         if (valid) {
-          let sql = this.formDynamic.replace(/(;|；)$/gi, '').replace(/\s/g, ' ').replace(/；/g, ';').split(';')
+          let sql = this.formDynamic.replace(/(;|；)$/gi, '').replace(/\s/g, ' ').replace(/；/g, ';')
           axios.post(`${this.$config.url}/sqlsyntax/`, {
             'data': JSON.stringify(this.formItem),
             'sql': JSON.stringify(sql),
@@ -469,7 +469,10 @@ export default {
           })
             .then(res => {
               this.validate_gen = true
-              this.$config.notice(res.data)
+              this.$Notice.success({
+                title: '成功',
+                desc: res.data
+              })
             })
             .catch(error => {
               this.validate_gen = true

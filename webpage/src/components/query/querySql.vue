@@ -152,6 +152,7 @@ export default {
       }))
     },
     choseName (vl) {
+      this.put_info.base = vl.title
       if (vl.expand === true) {
         this.$Spin.show({
           render: (h) => {
@@ -264,7 +265,10 @@ export default {
           }
           this.$Spin.hide()
         })
-        .catch(err => this.$config.err_notice(this, err))
+        .catch(err => {
+          this.$config.err_notice(this, err)
+          this.$Spin.hide()
+        })
     },
     exportdata () {
       exportcsv({

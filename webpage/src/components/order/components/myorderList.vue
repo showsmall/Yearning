@@ -57,6 +57,9 @@
             <FormItem label="数据库库名:">
               <p>{{formItem.basename}}</p>
             </FormItem>
+            <FormItem label="定时执行:">
+              <p>{{formItem.delay}}</p>
+            </FormItem>
             <FormItem>
                 <Input v-model="sql" type="textarea" :rows="8"></Input>
             </FormItem>
@@ -169,7 +172,7 @@
         this.reloadsql = true
       },
       comorder () {
-        let sql = this.sql.replace(/(;|；)$/gi, '').replace(/\s/g, ' ').replace(/；/g, ';').split(';')
+        let sql = this.sql.replace(/(;|；)$/gi, '').replace(/\s/g, ' ').replace(/；/g, ';')
         axios.post(`${this.$config.url}/sqlsyntax/`, {
           'data': JSON.stringify(this.formItem),
           'sql': JSON.stringify(sql),

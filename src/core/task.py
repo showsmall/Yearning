@@ -89,6 +89,18 @@ def ThinkTooMuch(func):
     return wrapper
 
 
+def DefenseMid(func):
+    def wrapper(self, request, args=None):
+        if request.method == "POST":
+            user = str(request.user)
+            ac = Account.objects.filter(username=user).first()
+            if ac.is_staff != 1:
+                return HttpResponse('请不要想太多!')
+        return func(self, request, args)
+
+    return wrapper
+
+
 def isAdmin(func):
     def wrapper(self, request, args=None):
         if request.user.is_staff != 1:
@@ -166,7 +178,7 @@ class order_push_message(object):
                         backup_dbname=i['backup_dbname']
                     )
         except Exception as e:
-            CUSTOM_ERROR.error(f'{e.__class__.__name__}--邮箱推送失败: {e}')
+            CUSTOM_ERROR.error(f'{e.__class__.__name__}: {e}')
         finally:
             status = SqlOrder.objects.filter(work_id=self.order.work_id).first()
             if status.status != 4:
